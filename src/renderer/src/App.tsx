@@ -1,35 +1,47 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { Layout, Tabs, TabsProps } from 'antd';
+import LexerView from '@renderer/components/lexer_view';
+import SyntacticView from '@renderer/components/syntactic_view';
+import { useState } from 'react';
+import SemanticView from '@renderer/components/semantic_view';
 
-function App(): JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+const tabs: TabsProps['items'] = [
+  {
+    key: '1',
+    label: 'Lexico',
+    children: <LexerView />,
+    forceRender: true
+  },
+  {
+    key: '2',
+    label: 'Sintactico',
+    children: <SyntacticView />,
+    forceRender: true
+  },
+  {
+    key: '3',
+    label: 'Semantico',
+    children: <SemanticView />,
+    forceRender: true
+  },
+  {
+    key: '6',
+    label: 'Ensamblador',
+    children: <div>6</div>,
+    disabled: true,
+    forceRender: true
+  }
+];
+
+const App = () => {
+  const [active, setActive] = useState('3');
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
-  )
-}
+    <Layout className={'h-dvh p-3'}>
+      <main className={'h-full'}>
+        <Tabs items={tabs} className={'h-full'} rootClassName={'h-full'} activeKey={active} onChange={setActive} />
+      </main>
+    </Layout>
+  );
+};
 
-export default App
+export default App;

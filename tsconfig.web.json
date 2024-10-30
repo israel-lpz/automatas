@@ -13,7 +13,15 @@
     "paths": {
       "@renderer/*": [
         "src/renderer/src/*"
+      ],
+      "@*": [
+        "src/*"
       ]
-    }
+    },
+
+    "strictNullChecks": true,
+    "alwaysStrict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }
