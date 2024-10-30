@@ -33,7 +33,7 @@ const tabs: TabsProps['items'] = [
 ];
 
 const App = () => {
-  const [active, setActive] = useState('3');
+  const [active, setActive] = useState('1');
 
   return (
     <Layout className={'h-dvh p-3'}>
