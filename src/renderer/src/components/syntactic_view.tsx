@@ -65,7 +65,7 @@ const SyntacticView = () => {
             showQuickJumper: false,
             hideOnSinglePage: false,
             showSizeChanger: false,
-            pageSize: 18
+            pageSize: 15
             // total: errors.length
           }}
           title={() => <h2>Tokens por linea</h2>}

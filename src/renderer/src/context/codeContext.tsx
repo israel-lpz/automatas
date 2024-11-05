@@ -1,22 +1,23 @@
 import { create } from 'zustand/react';
 import { customParser } from '@renderer/lexer/lexer';
-import { Assign, customLexer, Iden, Semi, Var, WhiteSpace } from '@renderer/lexer/tokens';
-import { IRecognitionException, IToken, TokenType } from 'chevrotain';
+import { customLexer, WhiteSpace } from '@renderer/lexer/tokens';
+import { IRecognitionException, IToken } from 'chevrotain';
 import { MarkerSeverity } from 'monaco-editor';
+import { getVariables, Variable } from '@renderer/semantic/getVariables';
 
 export type ICodeStore = {
   code: string;
   transformedCode: string;
   setCode: (code: string) => void;
   errors: IRecognitionException[];
-  variables: IVariables[];
+  variables: Variable[];
   originalTokens: IToken[];
 };
 
 export type IVariables = {
   name: string;
   type: string;
-  value: string;
+  value: string | null;
 };
 
 export const useCodeStore = create<ICodeStore>((setState) => ({
@@ -38,9 +39,14 @@ export const useCodeStore = create<ICodeStore>((setState) => ({
     customParser.block();
 
     const transformedCode = getCodeTransformed(tokensWhitespace);
-    const variables = obtenerVariables(tokens);
 
-    setState({ code, errors: customParser.errors, transformedCode, variables, originalTokens: tokensWhitespace });
+    setState({
+      code,
+      errors: customParser.errors,
+      transformedCode,
+      variables: getVariables(tokens),
+      originalTokens: tokensWhitespace
+    });
   }
 }));
 
@@ -55,43 +61,44 @@ const getCodeTransformed = (tokens: IToken[]) => {
   return transformed;
 };
 
-const obtenerVariables = (tokens: IToken[]) => {
-  const variables = new Map<string, IVariables>();
+// const obtenerVariables = (tokens: IToken[]) => {
+//   const variables = new Map<string, IVariables>();
+//
+//   for (let x = 0; x < tokens.length; x++) {
+//     const current = tokens[x]; // var;
+//     const next = tokens[x + 1]; // IDEN;
+//     const next2 = tokens[x + 2]; // =;
+//     const next3 = tokens[x + 3]; // DT;
+//     const next4 = tokens[x + 4]; // ;
+//
+//     if (eqT(current.tokenType, Var)) {
+//       if (eqT(next?.tokenType, Iden) && eqT(next2?.tokenType, Assign)) {
+//         if (next4.tokenType != Semi) {
+//           // Encontrar valores hasta el punto y coma
+//           let value = '';
+//           for (let i = x + 3; i < tokens.length; i++) {
+//             const token = tokens[i];
+//             if (eqT(token.tokenType, Semi)) break;
+//             value += token.image;
+//           }
+//           variables.set(next.image, { name: next.image, type: 'expresión', value });
+//         } else {
+//           variables.set(next.image, { name: next.image, type: next3.tokenType.name, value: next3.image });
+//         }
+//       }
+//       if (eqT(next?.tokenType, Iden) && !eqT(next2?.tokenType, Assign)) {
+//         variables.set(next.image, { name: next.image, type: 'null', value: 'null' });
+//       }
+//     }
+//   }
+//
+//   return [...variables.values()];
+// };
 
-  for (let x = 0; x < tokens.length; x++) {
-    const current = tokens[x]; // var;
-    const next = tokens[x + 1]; // IDEN;
-    const next2 = tokens[x + 2]; // =;
-    const next3 = tokens[x + 3]; // DT;
-    const next4 = tokens[x + 4]; // ;
-
-    if (eqT(current.tokenType, Var)) {
-      if (eqT(next.tokenType, Iden) && eqT(next2.tokenType, Assign)) {
-        if (next4.tokenType != Semi) {
-          // Encontrar valores hasta el punto y coma
-          let value = '';
-          for (let i = x + 3; i < tokens.length; i++) {
-            const token = tokens[i];
-            if (eqT(token.tokenType, Semi)) break;
-            value += token.image;
-          }
-          variables.set(next.image, { name: next.image, type: 'expresión', value });
-        } else {
-          variables.set(next.image, { name: next.image, type: next3.tokenType.name, value: next3.image });
-        }
-      }
-      if (eqT(next.tokenType, Iden) && !eqT(next2.tokenType, Assign)) {
-        variables.set(next.image, { name: next.image, type: 'null', value: 'null' });
-      }
-    }
-  }
-
-  return [...variables.values()];
-};
-
-const eqT = (token: TokenType, token2: TokenType) => {
-  return token.name === token2.name;
-};
+// const eqT = (token?: TokenType, token2?: TokenType) => {
+//   if (!token || !token2) return false;
+//   return token.name === token2.name;
+// };
 
 // Mapeo de errores
 export const createMarkersFromErrors = (errors: IRecognitionException[]) =>

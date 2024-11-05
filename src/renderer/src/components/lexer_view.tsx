@@ -19,8 +19,7 @@ const LexerView = () => {
             showQuickJumper: false,
             hideOnSinglePage: false,
             showSizeChanger: false,
-            pageSize: 4,
-            total: errors.length
+            pageSize: 4
           }}
           title={() => <h2>Simbolos</h2>}
           bordered

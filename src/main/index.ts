@@ -26,7 +26,9 @@ function createWindow(): void {
   mainWindow.on('closed', function () {
     mainWindow = null;
   });
-  mainWindow.webContents.openDevTools();
+  if (is.dev) {
+    mainWindow.webContents.openDevTools();
+  }
   mainWindow.maximize();
 
   // HMR for renderer base on electron-vite cli.

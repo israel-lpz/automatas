@@ -31,11 +31,7 @@ import {
   LTE,
   Mod,
   Or,
-  Capturar,
-  Integer,
-  Decimal,
-  Booleano,
-  String as StringToken
+  Capturar
 } from './tokens';
 
 class Parser extends CstParser {
@@ -73,7 +69,6 @@ class Parser extends CstParser {
 
   declarationOrAssignment = this.RULE('declarationOrAssignment', () => {
     this.CONSUME(Var, { ERR_MSG: 'Se esperaba la palabra reservada "var"' });
-    this.SUBRULE(this.allVarTypes);
     this.CONSUME(Iden, { ERR_MSG: 'Se esperaba un identificador' });
     this.OPTION(() => {
       this.CONSUME(Assign, { ERR_MSG: 'Se esperaba =' });
@@ -293,15 +288,6 @@ class Parser extends CstParser {
       { ALT: () => this.CONSUME(GTE) },
       { ALT: () => this.CONSUME(LT) },
       { ALT: () => this.CONSUME(LTE) }
-    ]);
-  });
-
-  allVarTypes = this.RULE('allVarTypes', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(Integer, { ERR_MSG: 'Se esperaba "entero"' }) },
-      { ALT: () => this.CONSUME(Decimal, { ERR_MSG: 'Se esperaba "decimal"' }) },
-      { ALT: () => this.CONSUME(StringToken, { ERR_MSG: 'Se esperaba "string"' }) },
-      { ALT: () => this.CONSUME(Booleano, { ERR_MSG: 'Se esperaba "entero"' }) }
     ]);
   });
 

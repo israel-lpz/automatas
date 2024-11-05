@@ -54,7 +54,7 @@ export const Comma = createToken({ name: 'CE9', pattern: /,/, label: ',' });
 // DataTypes
 export const DTInteger = createToken({ name: 'CNE', pattern: /-?\d+/ });
 export const DTDecimal = createToken({ name: 'CNR', pattern: /-?\d+\.\d+/ });
-export const DTBooleano = createToken({ name: 'CBL', pattern: /true|false/ });
+export const DTBooleano = createToken({ name: 'CBL', pattern: /verdadero|falso/ });
 export const DTString = createToken({ name: 'CAD', pattern: /"([^"]*)"/ });
 
 // Others...

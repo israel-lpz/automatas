@@ -6,7 +6,6 @@ import { PartParser } from '@renderer/lexer/parts/template';
 import { endParser } from '@renderer/lexer/parts/finalizar';
 import { printParser } from '@renderer/lexer/parts/imprimir';
 import { asignacionParser } from '@renderer/lexer/parts/asignacion';
-import { customParser } from '@renderer/lexer/lexer';
 
 export const allParsers = {
   [Capturar.name]: (tokens: IToken[]) => evaluateParser(capturarParser, tokens),
@@ -39,7 +38,7 @@ const evaluateParser = (parser: PartParser, tokens: IToken[]) => {
   }
 
   return {
-    html: getHTML(customParser),
+    html: getHTML(parser),
     errors: parser.errors,
     steps: parser.steps,
     isValid

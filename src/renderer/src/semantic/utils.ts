@@ -17,6 +17,7 @@ import {
   While,
   WhiteSpace
 } from '@renderer/lexer/tokens';
+import { getVariables } from '@renderer/semantic/getVariables';
 
 export const getBeginEndAreBalanced = (tokens: IToken[]) => {
   const begin = tokens.filter((x) => x.tokenType === Begin);
@@ -44,6 +45,7 @@ export const getVariablesDeclared = (tokensWhitespace: IToken[]) => {
   const tokens = tokensWhitespace.filter((x) => x.tokenType !== WhiteSpace);
   const errors: string[] = [];
   const variables = new Set<string>();
+  const editorErrors: IRecognitionException[] = [];
 
   // Variables declared
   for (let i = 0; i < tokens.length; i++) {
@@ -51,21 +53,25 @@ export const getVariablesDeclared = (tokensWhitespace: IToken[]) => {
     if (current.tokenType === Var && tokens[i + 1]?.tokenType === Iden) {
       const next = tokens[i + 1];
       if (variables.has(next.image)) {
-        errors.push(`Error: Variable ${next.image} ya ha sido declarada`);
+        const message = `Error: Variable ${next.image} ya ha sido declarada`;
+        errors.push(message);
+        editorErrors.push(createSemanticError(message, tokens[i + 3]));
       } else {
         variables.add(next.image);
       }
     }
 
-    if (current.tokenType === Iden && tokens[i - 1].tokenType !== Var) {
+    if (current.tokenType === Iden && tokens[i - 1]?.tokenType !== Var) {
       if (!variables.has(current.image)) {
-        errors.push(
-          `Variable "${current.image}" no ha sido declarada en la linea ${current.startLine}, columna ${current.startColumn}`
-        );
+        const message = `Variable "${current.image}" no ha sido declarada en la linea ${current.startLine}, columna ${current.startColumn}`;
+        errors.push(message);
+        editorErrors.push(createSemanticError(message, current));
       }
     }
   }
-  return errors;
+  console.log({ errors, editorErrors });
+
+  return { errors, editorErrors };
 };
 
 export const checkValidDataTypes = (tokens: IToken[]) => {
@@ -76,6 +82,8 @@ export const checkValidDataTypes = (tokens: IToken[]) => {
   for (let i = 0; i < tokens.length; i++) {
     const current = tokens[i];
     if (current.tokenType === While) {
+      const variables = getVariables(tokens.slice(0, i));
+
       const tokensInsideWhile: IToken[] = [];
       for (let j = i + 2; j < tokens.length; j++) {
         const currentInside = tokens[j];
@@ -85,16 +93,27 @@ export const checkValidDataTypes = (tokens: IToken[]) => {
         tokensInsideWhile.push(currentInside);
       }
 
+      if (tokensInsideWhile.length === 1 && tokensInsideWhile[0].tokenType === Iden) {
+        const variable = variables.find((x) => x.name === tokensInsideWhile[0].image);
+        if (variable) {
+          if (variable.type !== 'booleano') {
+            const message = `Expresión dentro del while no resulta en booleana \nlinea ${current.startLine}, columna ${current.startColumn}`;
+            errors.push(message);
+            editorErrors.push(createSemanticError(message, tokens[i + 3]));
+            continue;
+          }
+        } else {
+          // const message = `Variable ${tokensInsideWhile[0].image} no ha sido declarada \nlinea ${current.startLine}, columna ${current.startColumn}`;
+          // errors.push(message);
+          // editorErrors.push(createSemanticError(message, tokens[i + 3]));
+          continue;
+        }
+      }
+
       if (tokensInsideWhile.every((x) => !isRelationalOperator(x))) {
-        const message = `Expresión dentro del while no resulta en booleana ${current.startLine}, columna ${current.startColumn}`;
+        const message = `Expresión dentro del while no resulta en booleana \nlinea ${current.startLine}, columna ${current.startColumn}`;
         errors.push(message);
-        editorErrors.push({
-          message,
-          token: tokens[i + 3],
-          name: 'SemanticError',
-          resyncedTokens: [],
-          context: {} as any
-        });
+        editorErrors.push(createSemanticError(message, tokens[i + 3]));
       }
     }
   }
@@ -103,30 +122,123 @@ export const checkValidDataTypes = (tokens: IToken[]) => {
   for (let i = 0; i < tokens.length; i++) {
     const current = tokens[i];
     if (current.tokenType === If) {
-      const tokensInsideWhile: IToken[] = [];
+      const tokensInsideIf: IToken[] = [];
       for (let j = i + 2; j < tokens.length; j++) {
         const currentInside = tokens[j];
         if (currentInside.tokenType === ParRight) {
           break;
         }
-        tokensInsideWhile.push(currentInside);
+        tokensInsideIf.push(currentInside);
       }
-      if (tokensInsideWhile.every((x) => !isRelationalOperator(x))) {
-        const message = `Expresión dentro del if no resulta en booleana ${current.startLine}, columna ${current.startColumn}`;
+      const variables = getVariables(tokens.slice(0, i));
+
+      if (tokensInsideIf.length === 1 && tokensInsideIf[0].tokenType === Iden) {
+        const variable = variables.find((x) => x.name === tokensInsideIf[0].image);
+        if (variable) {
+          if (variable.type !== 'booleano') {
+            const message = `Expresión dentro del while no resulta en booleana \nlinea ${current.startLine}, columna ${current.startColumn}`;
+            errors.push(message);
+            editorErrors.push(createSemanticError(message, tokens[i + 3]));
+            continue;
+          }
+        } else {
+          // const message = `Variable ${tokensInsideIf[0].image} no ha sido declarada \nlinea ${current.startLine}, columna ${current.startColumn}`;
+          // errors.push(message);
+          // editorErrors.push(createSemanticError(message, tokens[i + 3]));
+          continue;
+        }
+      }
+
+      if (tokensInsideIf.every((x) => !isRelationalOperator(x))) {
+        const message = `Expresión dentro del if no resulta en booleana \nlinea ${current.startLine}, columna ${current.startColumn}`;
         errors.push(message);
-        editorErrors.push({
-          message,
-          token: tokens[i + 3],
-          name: 'SemanticError',
-          resyncedTokens: [],
-          context: {} as any
-        });
+        editorErrors.push(createSemanticError(message, tokens[i + 3]));
       }
     }
   }
 
   return { errors, editorErrors };
 };
+
+function createSemanticError(message: string, token: IToken) {
+  return {
+    message,
+    token,
+    name: 'SemanticError',
+    resyncedTokens: [],
+    context: {} as any
+  };
+}
+
+//  // const expresion: IToken[] = [];
+//       // for (let j = i + 4; j < tokens.length; j++) {
+//       //   const currentInside = tokens[j];
+//       //   if (currentInside.tokenType === Semi) {
+//       //     break;
+//       //   }
+//       //   expresion.push(currentInside);
+//       // }
+//       // if (expresion.length === 0) {
+//       //   variables.set(next.image, {
+//       //     name: next.image,
+//       //     value: next3.image,
+//       //     type: next3.tokenType.name
+//       //   });
+//       // } else if (expresion.length > 1) {
+//       //   const expresionString = expresion.map((x) => x.image).join(' ');
+//       //   let type = 'expresion';
+//       //   if (expresion.some((x) => isRelationalOperator(x))) {
+//       //     type = 'boolean';
+//       //   } else if (expresion.some((x) => x.tokenType === DTDecimal)) {
+//       //     type = 'decimal';
+//       //   } else if (expresion.some((x) => x.tokenType === DTInteger)) {
+//       //     type = 'entero';
+//       //   }
+//       //   variables.set(next.image, {
+//       //     name: next.image,
+//       //     value: expresionString,
+//       //     type
+//       //   });
+//       // } else {
+//       //   variables.set(next.image, {
+//       //     name: next.image,
+//       //     value: 'nulo',
+//       //     type: 'nulo'
+//       //   });
+//       // }
+
+// function getExpresion(tokens: IToken[], i: number, variables: Map<string, IVariables>) {
+//   const expresion: IToken[] = [];
+//   for (let j = i + 4; j < tokens.length; j++) {
+//     const currentInside = tokens[j];
+//     if (currentInside.tokenType === Semi) {
+//       break;
+//     }
+//     expresion.push(currentInside);
+//   }
+//
+//   const next = tokens[i + 1]; // Iden
+//   // const next2 = tokens[i + 2]; // =
+//   const next3 = tokens[i + 3]; // Value
+//
+//   if (expresion.length === 0) {
+//     return next3.tokenType.name
+//   } else if (expresion.length > 1) {
+//     let type = 'expresion';
+//     if (expresion.some((x) => isRelationalOperator(x))) {
+//       type = 'boolean';
+//     } else if (expresion.some((x) => x.tokenType === DTDecimal)) {
+//       type = 'decimal';
+//     } else if (expresion.some((x) => x.tokenType === DTInteger)) {
+//       type = 'entero';
+//     }
+//     return type;
+//
+//   } else {
+//     return 'nulo';
+//   }
+//
+// }
 
 const isRelationalOperator = (token: IToken) => {
   return [EQ, NEQ, GT, GTE, LT, LTE, DTBooleano].includes(token.tokenType);

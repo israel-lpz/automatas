@@ -37,6 +37,7 @@ const SemanticView = () => {
       });
       monacoRef.current?.editor.setModelMarkers(editor.getModel()!, 'owner', [
         ...uniqMarkers,
+        ...createMarkersFromErrors(errorsVar.editorErrors),
         ...createMarkersFromErrors(editorErrors)
       ]);
     }
@@ -72,12 +73,16 @@ const SemanticView = () => {
             {parenBalanced.areBalanced ? 'Equilibrado' : 'No equilibrado'}
           </Tag>
         </Card>
-        <Card title={'Errores de variables no declaradas'} className={'shadow-lg'}>
-          {[...errorsVar, ...errors].map((x, i) => (
-            <Tag color={'red'} key={i} className={'mb-0.5'}>
-              {x}
-            </Tag>
-          ))}
+        <Card title={'Errores de variables no declaradas o por tipo de dato'} className={'shadow-lg'}>
+          <div className="grid grid-cols-1 gap-y-1">
+            {[...errorsVar.errors, ...errors].map((x, i) => (
+              <div key={i}>
+                <Tag color={'red'} className={'w'}>
+                  {x}
+                </Tag>
+              </div>
+            ))}
+          </div>
         </Card>
       </div>
     </div>

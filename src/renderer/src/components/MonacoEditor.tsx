@@ -6,24 +6,41 @@ import { editor } from 'monaco-editor';
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 import { Card } from 'antd';
 
-export const defaultCode = `iniciar
+const defaultCode = `iniciar
     var nombre = "Super Language";
     imprimir(1, "Bienvenido a ", nombre, "!");
     // esto es un comentario
+    var sencilla = 5 + 10;
+    var media = 5 + (10 * 2 / 2);
+    var compleja = 5 + 10 * (2 / 2 - 5) < 10 / 3;
+    var complejaDecimal = 5.5 + 10.5 * (2.5 / 2.5 - 5.5) < 10.5 / 3.5;
+
+    // Error en sintaxis
+    capturar numeroSecreto, "Prueba";
+
     var numeroSecreto;
     numeroSecreto = "";
     noDeclarada = "";
     var helloWorld = 450 + 50.5;
-    var booleana = true || false;
+    var booleana = verdadero || falso;
     var adivinanza;
     capturar adivinanza;
     capturar numeroSecreto, helloWorld;
 
+    // Bien en lexico pero error en semantico por tipo de dato
     mientras (20) iniciar
 
     finalizar
 
-    capturar numeroSecreto, "Prueba";
+    // Bien en lexico pero error en semantico por tipo de dato
+    si(helloWorld) iniciar
+         imprimir("Hola");
+    finalizar
+
+    // Bien en lexico pero error en semantico por variable no declara
+    si(noDeclarada2) iniciar
+         imprimir("Hola");
+    finalizar
 
     mientras (adivinanza != numeroSecreto) iniciar
         imprimir("Adivina el número (1-100):");
